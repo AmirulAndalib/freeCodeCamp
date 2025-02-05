@@ -95,7 +95,10 @@ function updateMyEmail(req, res, next) {
   } = req;
   return user
     .requestUpdateEmail(email)
-    .subscribe(message => res.json({ message }), next);
+    .subscribe(
+      message => res.json({ type: message.type, message: message.message }),
+      next
+    );
 }
 
 // Re-enable once we can handle the traffic
@@ -146,14 +149,28 @@ function updateMyProfileUI(req, res, next) {
     user,
     body: { profileUI }
   } = req;
+
+  const update = {
+    isLocked: !!profileUI.isLocked,
+    showAbout: !!profileUI.showAbout,
+    showCerts: !!profileUI.showCerts,
+    showDonation: !!profileUI.showDonation,
+    showHeatMap: !!profileUI.showHeatMap,
+    showLocation: !!profileUI.showLocation,
+    showName: !!profileUI.showName,
+    showPoints: !!profileUI.showPoints,
+    showPortfolio: !!profileUI.showPortfolio,
+    showTimeLine: !!profileUI.showTimeLine
+  };
+
   user.updateAttribute(
     'profileUI',
-    profileUI,
+    update,
     createStandardHandler(req, res, next, 'flash.privacy-updated')
   );
 }
 
-function updateMyAbout(req, res, next) {
+export function updateMyAbout(req, res, next) {
   const {
     user,
     body: { name, location, about, picture }
@@ -162,7 +179,7 @@ function updateMyAbout(req, res, next) {
   // prevent dataurls from being stored
   const update = isURL(picture, { require_protocol: true })
     ? { name, location, about, picture }
-    : { name, location, about };
+    : { name, location, about, picture: '' };
   return user.updateAttributes(
     update,
     createStandardHandler(req, res, next, 'flash.updated-about-me')
@@ -237,7 +254,7 @@ const updatePrivacyTerms = (req, res, next) => {
 const allowedSocialsAndDomains = {
   githubProfile: 'github.com',
   linkedin: 'linkedin.com',
-  twitter: 'twitter.com',
+  twitter: ['twitter.com', 'x.com'],
   website: ''
 };
 
@@ -263,7 +280,9 @@ export function updateMySocials(...args) {
         const url = new URL(val);
         const topDomain = url.hostname.split('.').slice(-2);
         if (topDomain.length === 2) {
-          return topDomain.join('.') === domain;
+          return Array.isArray(domain)
+            ? domain.some(d => topDomain.join('.') === d)
+            : topDomain.join('.') === domain;
         }
         return false;
       } catch (e) {

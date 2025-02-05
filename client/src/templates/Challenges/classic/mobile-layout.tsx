@@ -1,5 +1,5 @@
 import i18next from 'i18next';
-import React, { Component, ReactElement } from 'react';
+import React, { Component, type ReactNode } from 'react';
 import { faWindowRestore } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createSelector } from 'reselect';
@@ -17,39 +17,40 @@ import {
   showPreviewPaneSelector
 } from '../redux/selectors';
 import { TOOL_PANEL_HEIGHT } from '../../../../config/misc';
-import ToolPanel from '../components/tool-panel';
 import PreviewPortal from '../components/preview-portal';
+import Notes from '../components/notes';
 import EditorTabs from './editor-tabs';
 
 interface MobileLayoutProps {
   editor: JSX.Element | null;
-  guideUrl: string;
   hasEditableBoundaries: boolean;
-  hasNotes: boolean;
   hasPreview: boolean;
   instructions: JSX.Element;
-  notes: ReactElement;
+  notes: string;
   preview: JSX.Element;
+  onPreviewResize: () => void;
   windowTitle: string;
   showPreviewPortal: boolean;
   showPreviewPane: boolean;
+  toolPanel: ReactNode;
   removePortalWindow: () => void;
   setShowPreviewPortal: (arg: boolean) => void;
   setShowPreviewPane: (arg: boolean) => void;
   portalWindow: null | Window;
   updateUsingKeyboardInTablist: (arg0: boolean) => void;
   testOutput: JSX.Element;
-  videoUrl: string;
   usesMultifileEditor: boolean;
 }
 
-enum Tab {
-  Editor = 'editor',
-  Preview = 'preview',
-  Console = 'console',
-  Notes = 'notes',
-  Instructions = 'instructions'
-}
+const tabs = {
+  editor: 'editor',
+  preview: 'preview',
+  console: 'console',
+  notes: 'notes',
+  instructions: 'instructions'
+} as const;
+
+type Tab = keyof typeof tabs;
 
 interface MobileLayoutState {
   currentTab: Tab;
@@ -83,7 +84,9 @@ class MobileLayout extends Component<MobileLayoutProps, MobileLayoutState> {
   #toolPanelGroup!: HTMLElement;
 
   state: MobileLayoutState = {
-    currentTab: this.props.hasEditableBoundaries ? Tab.Editor : Tab.Instructions
+    currentTab: this.props.hasEditableBoundaries
+      ? tabs.editor
+      : tabs.instructions
   };
 
   switchTab = (tab: string): void => {
@@ -149,19 +152,18 @@ class MobileLayout extends Component<MobileLayoutProps, MobileLayoutState> {
       instructions,
       editor,
       testOutput,
-      hasNotes,
       hasPreview,
       notes,
       preview,
+      onPreviewResize,
       showPreviewPane,
       showPreviewPortal,
+      toolPanel,
       removePortalWindow,
       setShowPreviewPane,
       setShowPreviewPortal,
       portalWindow,
       windowTitle,
-      guideUrl,
-      videoUrl,
       usesMultifileEditor
     } = this.props;
 
@@ -220,29 +222,33 @@ class MobileLayout extends Component<MobileLayoutProps, MobileLayoutState> {
         >
           <TabsList className='nav-lists'>
             {!hasEditableBoundaries && (
-              <TabsTrigger value={Tab.Instructions}>
+              <TabsTrigger value={tabs.instructions}>
                 {i18next.t('learn.editor-tabs.instructions')}
               </TabsTrigger>
             )}
-            <TabsTrigger value={Tab.Editor}>
+            <TabsTrigger value={tabs.editor}>
               {i18next.t('learn.editor-tabs.code')}
             </TabsTrigger>
-            {hasNotes && usesMultifileEditor && (
-              <TabsTrigger value={Tab.Notes}>
+            {!!notes && usesMultifileEditor && (
+              <TabsTrigger value={tabs.notes}>
                 {i18next.t('learn.editor-tabs.notes')}
               </TabsTrigger>
             )}
-            <TabsTrigger value={Tab.Console}>
+            <TabsTrigger value={tabs.console}>
               {i18next.t('learn.editor-tabs.console')}
             </TabsTrigger>
             {hasPreview && (
-              <TabsTrigger value={Tab.Preview}>
+              <TabsTrigger value={tabs.preview}>
                 {i18next.t('learn.editor-tabs.preview')}
               </TabsTrigger>
             )}
           </TabsList>
 
-          <TabsContent tabIndex={-1} className='tab-content' value={Tab.Editor}>
+          <TabsContent
+            tabIndex={-1}
+            className='tab-content'
+            value={tabs.editor}
+          >
             {usesMultifileEditor && <EditorTabs />}
             {editor}
           </TabsContent>
@@ -250,7 +256,7 @@ class MobileLayout extends Component<MobileLayoutProps, MobileLayoutState> {
             <TabsContent
               tabIndex={-1}
               className='tab-content'
-              value={Tab.Instructions}
+              value={tabs.instructions}
             >
               {instructions}
             </TabsContent>
@@ -258,24 +264,25 @@ class MobileLayout extends Component<MobileLayoutProps, MobileLayoutState> {
           <TabsContent
             tabIndex={-1}
             className='tab-content'
-            value={Tab.Console}
+            value={tabs.console}
           >
             {testOutput}
           </TabsContent>
-          {hasNotes && usesMultifileEditor && (
+          {!!notes && usesMultifileEditor && (
             <TabsContent
               tabIndex={-1}
               className='tab-content'
-              value={Tab.Notes}
+              value={tabs.notes}
             >
-              {notes}
+              <Notes notes={notes} />
             </TabsContent>
           )}
           {hasPreview && (
             <TabsContent
               tabIndex={-1}
               className='tab-content'
-              value={Tab.Preview}
+              data-playwright-test-label='preview-pane'
+              value={tabs.preview}
               forceMount
               // forceMount causes the preview tabpanel to never be hidden,
               // so we need to manually add it when preview is not active.
@@ -299,13 +306,7 @@ class MobileLayout extends Component<MobileLayoutProps, MobileLayoutState> {
               )}
             </TabsContent>
           )}
-          {!hasEditableBoundaries && (
-            <ToolPanel
-              guideUrl={guideUrl}
-              isMobile={true}
-              videoUrl={videoUrl}
-            />
-          )}
+          {!hasEditableBoundaries && toolPanel}
           {hasPreview && this.state.currentTab !== 'preview' && (
             <div className='portal-button-wrap'>
               <button
@@ -320,7 +321,9 @@ class MobileLayout extends Component<MobileLayoutProps, MobileLayoutState> {
           )}
         </Tabs>
         {displayPreviewPortal && (
-          <PreviewPortal windowTitle={windowTitle}>{preview}</PreviewPortal>
+          <PreviewPortal onResize={onPreviewResize} windowTitle={windowTitle}>
+            {preview}
+          </PreviewPortal>
         )}
       </>
     );

@@ -6,9 +6,6 @@
   "dashedName": "learn-html-forms-by-building-a-registration-form",
   "helpCategory": "HTML-CSS",
   "order": 3,
-  "time": "5 hours",
-  "template": "",
-  "required": [],
   "superBlock": "2022/responsive-web-design",
   "challengeOrder": [
     {
@@ -266,6 +263,11 @@
     {
       "id": "60ffefd6479a3d084fb77cbc",
       "title": "Step 64"
+    },
+    {
+      "id": "6537e0be715fcb57d31ba8c3",
+      "title": "Step 65"
     }
-  ]
+  ],
+  "blockLayout": "legacy-challenge-grid"
 }
