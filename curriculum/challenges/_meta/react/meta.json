@@ -4,7 +4,6 @@
   "dashedName": "react",
   "helpCategory": "JavaScript",
   "order": 3,
-  "time": "5 hours",
   "template": "<body><div id='root'></div><div id='challenge-node'></div>${ source || '' }</body>",
   "required": [
     {
@@ -12,6 +11,12 @@
     },
     {
       "src": "https://unpkg.com/react-dom@16.4.0/umd/react-dom.production.min.js"
+    },
+    {
+      "src": "https://unpkg.com/react-dom@16.4.0/umd/react-dom-test-utils.production.min.js"
+    },
+    {
+      "src": "https://unpkg.com/react-dom@16.4.0/umd/react-dom-server.browser.production.min.js"
     }
   ],
   "superBlock": "front-end-development-libraries",
@@ -204,5 +209,6 @@
       "id": "5a24c314108439a4d403618d",
       "title": "Render React on the Server with renderToString"
     }
-  ]
+  ],
+  "blockLayout": "legacy-challenge-list"
 }

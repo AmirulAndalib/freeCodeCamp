@@ -19,17 +19,17 @@ function ChallengeTitle({
   return (
     <div className='challenge-title-wrap'>
       {translationPending && (
-        <>
-          <Link
-            className='title-translation-cta'
-            to={i18next.t('links:help-translate-link-url')}
-          >
-            {i18next.t('misc.translation-pending')}
-          </Link>
-        </>
+        <Link
+          className='title-translation-cta'
+          to={i18next.t('links:help-translate-link-url')}
+        >
+          {i18next.t('misc.translation-pending')}
+        </Link>
       )}
       <div className='challenge-title'>
-        <h1 id='content-start'>{children}</h1>
+        <h1 id='content-start' data-playwright-test-label='challenge-title'>
+          {children}
+        </h1>
         {isCompleted && <GreenPass />}
       </div>
     </div>
